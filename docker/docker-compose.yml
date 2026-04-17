@@ -124,6 +124,21 @@ services:
       - /app/node_modules
     command: node dist/main.js
 
+frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: doktorgo-frontend
+    environment:
+      NODE_ENV: production
+      API_URL: http://backend:3000/api/v1
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: doktorgo-dev-secret-key
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
   redis_data:
