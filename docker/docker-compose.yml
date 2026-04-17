@@ -48,6 +48,43 @@ services:
       timeout: 5s
       retries:5
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: doktorgo-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@doktorgo.local
+      PGADMIN_DEFAULT_PASSWORD: doktorgo
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  mongo-express:
+    image: mongo-express
+    container_name: doktorgo-mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: doktorgo
+      ME_CONFIG_MONGODB_ADMINPASSWORD: doktorgo
+      ME_CONFIG_MONGODB_URL: mongodb://doktorgo:doktorgo@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: doktorgo-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MH_ENV_DOMAINS: doktorgo.local
+
   backend:
     build:
       context: ../backend
@@ -71,6 +108,8 @@ services:
       MONGO_USER: doktorgo
       MONGO_PASSWORD: doktorgo
       MONGO_DATABASE: doktorgo
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
     ports:
       - "3000:3000"
     depends_on:
@@ -89,3 +128,4 @@ volumes:
   postgres_data:
   redis_data:
   mongodb_data:
+  pgadmin_data:
