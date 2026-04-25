@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+
 interface Doctor {
   id: string;
   firstName: string;
@@ -36,6 +38,7 @@ const languages = ['English', 'Tagalog', 'Cebuano', 'Ilonggo', 'Kapampangan'];
 
 export default function DoctorsPage() {
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -59,7 +62,7 @@ export default function DoctorsPage() {
   const fetchDoctors = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors`, {
+      const res = await fetch(`${API_URL}/doctors`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {

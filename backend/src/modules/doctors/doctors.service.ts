@@ -78,6 +78,70 @@ export class DoctorsService {
     return this.update(id, { isAvailable });
   }
 
+  async searchDoctors(filters: {
+    query?: string;
+    specialty?: string;
+    language?: string;
+    isAvailable?: boolean;
+  }): Promise<Doctor[]> {
+    const qb = this.doctorsRepository.createQueryBuilder('doctor')
+      .leftJoinAndSelect('doctor.user', 'user');
+
+    if (filters.query) {
+      qb.andWhere(
+        '(user.firstName ILIKE :query OR user.lastName ILIKE :query OR doctor.specialty ILIKE :query)',
+        { query: `%${filters.query}%` },
+      );
+    }
+    if (filters.specialty) {
+      qb.andWhere('doctor.specialty = :specialty', { specialty: filters.specialty });
+    }
+    if (filters.isAvailable !== undefined) {
+      qb.andWhere('doctor.isAvailable = :isAvailable', { isAvailable: filters.isAvailable });
+    }
+
+    return qb.getMany();
+  }
+
+  async getDoctorSchedule(id: string, date?: string): Promise<any> {
+    const doctor = await this.findById(id);
+    return {
+      id: doctor.id,
+      availableDays: doctor.availableDays || [],
+      startTime: doctor.startTime || '09:00',
+      endTime: doctor.endTime || '17:00',
+      timezone: 'Asia/Manila',
+    };
+  }
+
+  async updateSchedule(
+    id: string,
+    schedule: { availableDays?: string[]; startTime?: string; endTime?: string },
+  ): Promise<Doctor> {
+    return this.update(id, schedule);
+  }
+
+  async getSpecialties(): Promise<string[]> {
+    return [
+      'General Medicine',
+      'Internal Medicine',
+      'Cardiology',
+      'Dermatology',
+      'Endocrinology',
+      'Gastroenterology',
+      'Neurology',
+      'Obstetrics & Gynecology',
+      'Oncology',
+      'Ophthalmology',
+      'Orthopedics',
+      'Pediatrics',
+      'Psychiatry',
+      'Pulmonology',
+      'Rheumatology',
+      'Urology',
+    ];
+  }
+
   async getAvailableDoctors(specialty?: string): Promise<Doctor[]> {
     return this.findAll({ specialty, isAvailable: true });
   }

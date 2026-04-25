@@ -37,9 +37,9 @@ export class DoctorsController {
     return this.doctorsService.getAvailableDoctors(specialty);
   }
 
-  @Get('search')
+  @Get('search-by-symptom')
   @ApiOperation({ summary: 'Search doctors by symptom' })
-  async search(@Query('symptom') symptom: string) {
+  async searchBySymptom(@Query('symptom') symptom: string) {
     return this.doctorsService.searchBySymptom(symptom);
   }
 
