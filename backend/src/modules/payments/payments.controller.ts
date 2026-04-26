@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
+import { GCashService } from './gcash.service';
 import { CreatePaymentDto } from './dto/payments.dto';
 import { PaymentStatus, PaymentMethod } from '../../database/entities/payment.entity';
 
@@ -8,7 +9,10 @@ import { PaymentStatus, PaymentMethod } from '../../database/entities/payment.en
 @Controller('payments')
 @ApiBearerAuth()
 export class PaymentsController {
-  constructor(private paymentsService: PaymentsService) {}
+  constructor(
+    private paymentsService: PaymentsService,
+    private gcashService: GCashService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all payments with filters' })
@@ -66,5 +70,45 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Get payment statistics' })
   async getStats(@Query('patientId') patientId?: string) {
     return this.paymentsService.getPaymentStats(patientId);
+  }
+
+  @Post('gcash/checkout')
+  @ApiOperation({ summary: 'Create GCash payment' })
+  async createGCashPayment(
+    @Body() body: { amount: number; description?: string; metadata?: Record<string, any> },
+  ) {
+    if (!this.gcashService.isConfigured()) {
+      return {
+        error: 'GCash not configured',
+        message: 'Add GCASH_CLIENT_ID, GCASH_CLIENT_SECRET to environment',
+        method: 'mock',
+        mockData: {
+          id: 'mock_' + Date.now(),
+          status: 'pending',
+          amount: body.amount,
+          currency: 'PHP',
+          checkoutUrl: 'gcash://mock',
+        },
+      };
+    }
+    return this.gcashService.createPayment({
+      amount: body.amount,
+      description: body.description,
+      metadata: body.metadata,
+    });
+  }
+
+  @Get('gcash/status/:paymentId')
+  @ApiOperation({ summary: 'Get GCash payment status' })
+  async getGCashStatus(@Param('paymentId') paymentId: string) {
+    return this.gcashService.getPaymentStatus(paymentId);
+  }
+
+  @Get('gcash/check')
+  @ApiOperation({ summary: 'Check GCash configuration' })
+  async checkGCash() {
+    return {
+      configured: this.gcashService.isConfigured(),
+    };
   }
 }

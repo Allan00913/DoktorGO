@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Payment } from '../../database/entities/payment.entity';
 import { PaymentsService } from './payments.service';
 import { PaymentsController } from './payments.controller';
+import { GCashService } from './gcash.service';
 import { PatientsModule } from '../patients/patients.module';
 
 @Module({
@@ -11,7 +12,7 @@ import { PatientsModule } from '../patients/patients.module';
     forwardRef(() => PatientsModule),
   ],
   controllers: [PaymentsController],
-  providers: [PaymentsService],
-  exports: [PaymentsService],
+  providers: [PaymentsService, GCashService],
+  exports: [PaymentsService, GCashService],
 })
 export class PaymentsModule {}

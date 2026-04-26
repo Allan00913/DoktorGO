@@ -162,7 +162,7 @@ export default function AppointmentsPage() {
                   </div>
                   
                   <div className="apt-actions">
-                    {apt.status === 'pending' || apt.status === 'confirmed' ? (
+                    {apt.isPaid ? (
                       <>
                         <button className="join-btn">Join Consultation</button>
                         <button 
@@ -173,7 +173,12 @@ export default function AppointmentsPage() {
                         </button>
                       </>
                     ) : (
-                      <button className="view-btn">View Details</button>
+                      <Link 
+                        href={`/payment?amount=${apt.consultationFee || 500}&appointmentId=${apt.id}&doctor=${apt.doctorName || ''}`}
+                        className="pay-btn"
+                      >
+                        Pay Now
+                      </Link>
                     )}
                   </div>
                 </div>

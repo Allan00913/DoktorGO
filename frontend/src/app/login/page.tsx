@@ -18,11 +18,13 @@ export default function Login() {
     setError('');
     setLoading(true);
 
+    console.log('Login payload:', { emailOrPhone: email, password });
+
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ emailOrPhone: email, password }),
       });
 
       const data = await res.json();
