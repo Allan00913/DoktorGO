@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Consultation } from '../../database/entities/consultation.entity';
 import { ConsultationsService } from './consultations.service';
+import { VideoService } from './video.service';
 import { ConsultationsController } from './consultations.controller';
 import { DoctorsModule } from '../doctors/doctors.module';
 import { PatientsModule } from '../patients/patients.module';
@@ -13,7 +14,7 @@ import { PatientsModule } from '../patients/patients.module';
     forwardRef(() => PatientsModule),
   ],
   controllers: [ConsultationsController],
-  providers: [ConsultationsService],
-  exports: [ConsultationsService],
+  providers: [ConsultationsService, VideoService],
+  exports: [ConsultationsService, VideoService],
 })
 export class ConsultationsModule {}

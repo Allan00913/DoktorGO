@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsultationsService } from './consultations.service';
+import { VideoService } from './video.service';
 import { CreateConsultationDto, CompleteConsultationDto } from './dto/consultations.dto';
 import { ConsultationStatus } from '../../database/entities/consultation.entity';
 
@@ -8,7 +9,10 @@ import { ConsultationStatus } from '../../database/entities/consultation.entity'
 @Controller('consultations')
 @ApiBearerAuth()
 export class ConsultationsController {
-  constructor(private consultationsService: ConsultationsService) {}
+  constructor(
+    private consultationsService: ConsultationsService,
+    private videoService: VideoService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all consultations with filters' })
@@ -61,5 +65,31 @@ export class ConsultationsController {
   @ApiOperation({ summary: 'Get doctor consultations' })
   async getDoctorConsultations(@Param('doctorId') doctorId: string) {
     return this.consultationsService.getDoctorConsultations(doctorId);
+  }
+
+  @Post('video/room')
+  @ApiOperation({ summary: 'Create video consultation room' })
+  async createVideoRoom(
+    @Body() body: { appointmentId: string; doctorId: string; patientId: string },
+  ) {
+    return this.videoService.createRoom(body.appointmentId, body.doctorId, body.patientId);
+  }
+
+  @Get('video/room/:roomId')
+  @ApiOperation({ summary: 'Get video room info' })
+  async getVideoRoom(@Param('roomId') roomId: string) {
+    return this.videoService.getRoomInfo(roomId);
+  }
+
+  @Put('video/room/:roomId/end')
+  @ApiOperation({ summary: 'End video consultation' })
+  async endVideoRoom(@Param('roomId') roomId: string) {
+    return this.videoService.endRoom(roomId);
+  }
+
+  @Get('video/check')
+  @ApiOperation({ summary: 'Check video service status' })
+  async checkVideo() {
+    return { configured: this.videoService.isConfigured() };
   }
 }

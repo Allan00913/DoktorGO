@@ -1,167 +1,228 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function ConsultationPage() {
-  const [status, setStatus] = useState<'idle' | 'searching' | 'connected' | 'ended'>('idle');
-  const [doctor, setDoctor] = useState<{ name: string; specialty: string } | null>(null);
-  const [messages, setMessages] = useState<{ from: string; text: string }[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const localVideoRef = useRef<HTMLDivElement>(null);
-  const remoteVideoRef = useRef<HTMLDivElement>(null);
+function ConsultationContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [appointmentId, setAppointmentId] = useState('');
+  const [roomId, setRoomId] = useState('');
+  const [token, setToken] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [inCall, setInCall] = useState(false);
+  const [isDoctor, setIsDoctor] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
   useEffect(() => {
-    if (status === 'searching') {
-      const timer = setTimeout(() => {
-        setDoctor({ name: 'Dr. Maria Reyes', specialty: 'General Medicine' });
-        setStatus('connected');
-      }, 3000);
-      return () => clearTimeout(timer);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
     }
-  }, [status]);
 
-  const startConsultation = () => {
-    setStatus('searching');
-    setMessages([{
-      from: 'system',
-      text: 'Finding an available doctor...'
-    }]);
-  };
-
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
+    const aptId = searchParams.get('appointmentId');
+    const rId = searchParams.get('roomId');
     
-    setMessages([...messages, { from: 'you', text: newMessage }]);
-    setNewMessage('');
+    if (aptId) setAppointmentId(aptId);
+    if (rId) {
+      setRoomId(rId);
+      setInCall(true);
+    }
+
+    const role = localStorage.getItem('userRole');
+    setIsDoctor(role === 'doctor');
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    if (inCall) {
+      const interval = setInterval(() => {
+        setCallDuration(d => d + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [inCall]);
+
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const endConsultation = () => {
-    setStatus('ended');
-  };
-
-  const renderContent = () => {
-    if (status === 'idle') {
-      return (
-        <div className="start-screen">
-          <div className="icon">🎥</div>
-          <h2>Start Instant Consultation</h2>
-          <p>Connect with a licensed doctor in minutes. Get diagnosed, receive prescriptions, and medical advice — all via video call.</p>
-          
-          <div className="requirements">
-            <h3>What you'll need:</h3>
-            <ul>
-              <li>📷 Working camera</li>
-              <li>🎤 Working microphone</li>
-              <li>💾 Stable internet connection</li>
-            </ul>
-          </div>
-          
-          <button onClick={startConsultation} className="start-btn">
-            Start Video Consultation
-          </button>
-          
-          <p className="note">Average wait time: 3-5 minutes</p>
-        </div>
-      );
+  const startCall = async () => {
+    if (!appointmentId) {
+      alert('No appointment selected');
+      return;
     }
 
-    if (status === 'searching') {
-      return (
-        <div className="searching-screen">
-          <div className="loader"></div>
-          <h2>Finding a Doctor</h2>
-          <p>We&apos;re connecting you with an available licensed doctor...</p>
-          
-          <div className="tips">
-            <h3>While you wait:</h3>
-            <ul>
-              <li>Prepare your symptoms list</li>
-              <li>Have your medical history ready</li>
-              <li>Find a well-lit area</li>
-            </ul>
-          </div>
-        </div>
-      );
-    }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/consultations/video/room`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appointmentId,
+          doctorId: 'current-doctor-id',
+          patientId: 'current-patient-id',
+        }),
+      });
 
-    if (status === 'connected') {
-      return (
-        <div className="call-screen">
-          <div className="video-area">
-            <div className="remote-video" ref={remoteVideoRef}>
-              <div className="doctor-placeholder">
-                <span className="avatar">{doctor?.name[0]}</span>
-                <span className="name">{doctor?.name}</span>
-                <span className="specialty">{doctor?.specialty}</span>
-              </div>
-            </div>
-            <div className="local-video" ref={localVideoRef}></div>
-          </div>
-
-          <div className="call-info">
-            <div className="status-indicator">
-              <span className="dot"></span>
-              In Call
-            </div>
-            <span className="duration">00:03:42</span>
-          </div>
-
-          <div className="call-controls">
-            <button className="control-btn mute">🎤</button>
-            <button className="control-btn camera">📷</button>
-            <button className="control-btn end" onClick={endConsultation}>End Call</button>
-          </div>
-
-          <div className="chat-area">
-            <div className="chat-messages">
-              {messages.map((msg, i) => (
-                <div key={i} className={`message ${msg.from}`}>
-                  {msg.text}
-                </div>
-              ))}
-            </div>
-            <form onSubmit={sendMessage} className="chat-input">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-              />
-              <button type="submit">Send</button>
-            </form>
-          </div>
-        </div>
-      );
-    }
-
-    if (status === 'ended') {
-      return (
-        <div className="ended-screen">
-          <div className="icon">✓</div>
-          <h2>Consultation Ended</h2>
-          <p>Thank you for using DoktorGO. Your prescription (if any) will be sent to your registered email and available in the prescriptions section.</p>
-          
-          <div className="summary">
-            <h3>Consultation Summary</h3>
-            <p>Doctor: {doctor?.name}</p>
-            <p>Duration: 3 minutes 42 seconds</p>
-            <p>Status: Completed</p>
-          </div>
-          
-          <div className="actions">
-            <Link href="/prescriptions" className="btn-primary">
-              View Prescription
-            </Link>
-            <Link href="/dashboard" className="btn-secondary">
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      );
+      const data = await res.json();
+      
+      if (data.roomId) {
+        setRoomId(data.roomId);
+        setToken(data.token);
+        setInCall(true);
+      } else {
+        alert('Failed to start call');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error starting call');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const endCall = async () => {
+    if (roomId) {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${API_URL}/consultations/video/room/${roomId}/end`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setInCall(false);
+    setRoomId('');
+    setToken('');
+    setCallDuration(0);
+    router.push('/appointments');
+  };
+
+  if (inCall) {
+    return (
+      <div className="call-page">
+        <div className="video-area">
+          <div className="remote-video">
+            <div className="avatar">
+              {isDoctor ? '👨‍⚕️' : '👤'}
+            </div>
+            <p>{isDoctor ? 'Patient' : 'Dr. Smith'}</p>
+          </div>
+          <div className="local-video">
+            <div className="avatar small">
+              {isDoctor ? '👨‍⚕️' : '👤'}
+            </div>
+          </div>
+        </div>
+
+        <div className="call-controls">
+          <div className="timer">{formatDuration(callDuration)}</div>
+          <div className="buttons">
+            <button className="mute-btn">🎤</button>
+            <button className="video-btn">📷</button>
+            <button className="end-btn" onClick={endCall}>📞</button>
+          </div>
+        </div>
+
+        <style jsx>{`
+          .call-page {
+            min-height: 100vh;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+          }
+          .video-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .remote-video {
+            width: 80%;
+            height: 60%;
+            background: #2a2a2a;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .avatar {
+            font-size: 5rem;
+          }
+          .avatar.small {
+            font-size: 2rem;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            border-radius: 50%;
+            padding: 10px;
+          }
+          .local-video {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 120px;
+            height: 90px;
+            background: #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .call-controls {
+            background: #222;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .timer {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+          }
+          .buttons {
+            display: flex;
+            gap: 1rem;
+          }
+          .mute-btn, .video-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: #333;
+            font-size: 1.25rem;
+            cursor: pointer;
+          }
+          .end-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: #e74c3c;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="page">
@@ -171,359 +232,120 @@ export default function ConsultationPage() {
             <span className="logo-icon">+</span>
             DoktorGO
           </Link>
+          <div className="nav-links">
+            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/appointments">Appointments</Link>
+          </div>
         </div>
       </nav>
 
       <main className="main-content">
-        {renderContent()}
+        <div className="container">
+          <div className="consultation-card">
+            <div className="icon">📹</div>
+            <h1>Video Consultation</h1>
+            <p>Connect with your doctor via secure video call</p>
+
+            <div className="info-box">
+              <h3>Before joining:</h3>
+              <ul>
+                <li>✅ Ensure stable internet connection</li>
+                <li>✅ Allow camera & microphone access</li>
+                <li>✅ Find a quiet, well-lit place</li>
+                <li>✅ Have your symptoms ready to discuss</li>
+              </ul>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Enter appointment ID (or leave empty to create new)"
+              value={appointmentId}
+              onChange={(e) => setAppointmentId(e.target.value)}
+            />
+
+            <button 
+              className="join-btn"
+              onClick={startCall}
+              disabled={loading}
+            >
+              {loading ? 'Connecting...' : 'Join Consultation'}
+            </button>
+          </div>
+        </div>
       </main>
 
       <style jsx>{`
-        .page {
-          min-height: 100vh;
-          background: #1a1a1a;
-        }
-
-        .navbar {
-          background: transparent;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 100;
-        }
-
-        .nav-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 1rem 1.5rem;
-        }
-
-        .logo {
-          font-size: 1.5rem;
-          font-weight: 800;
-          color: #00aacc;
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
-
-        .logo-icon {
-          background: #00aacc;
-          color: white;
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.25rem;
-        }
-
-        .main-content {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 5rem 1.5rem;
-        }
-
-        .start-screen, .searching-screen, .ended-screen {
-          background: #262626;
-          border-radius: 16px;
-          padding: 3rem;
-          text-align: center;
+        .consultation-card {
           max-width: 500px;
-          width: 100%;
-          color: white;
+          margin: 0 auto;
+          padding: 2rem;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+          background: white;
+          text-align: center;
         }
-
         .icon {
           font-size: 4rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .start-screen h2, .searching-screen h2, .ended-screen h2 {
-          font-size: 1.75rem;
           margin-bottom: 1rem;
         }
-
-        .start-screen p, .searching-screen p, .ended-screen p {
-          color: #a1a1a1;
-          margin-bottom: 2rem;
-        }
-
-        .requirements {
-          background: #323232;
-          padding: 1.5rem;
-          border-radius: 12px;
-          text-align: left;
-          margin-bottom: 2rem;
-        }
-
-        .requirements h3, .tips h3 {
-          font-size: 1rem;
-          margin-bottom: 0.75rem;
-        }
-
-        .requirements ul, .tips ul {
-          list-style: none;
-        }
-
-        .requirements li, .tips li {
-          color: #a1a1a1;
+        h1 {
+          font-size: 1.75rem;
           margin-bottom: 0.5rem;
         }
-
-        .start-btn {
+        .consultation-card p {
+          color: #6b7280;
+          margin-bottom: 1.5rem;
+        }
+        .info-box {
+          background: #f0f9ff;
+          border-radius: 8px;
+          padding: 1rem;
+          text-align: left;
+          margin-bottom: 1.5rem;
+        }
+        .info-box h3 {
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
+        }
+        .info-box ul {
+          margin: 0;
+          padding-left: 1.25rem;
+        }
+        .info-box li {
+          color: #374151;
+          margin-bottom: 0.25rem;
+        }
+        input {
+          width: 100%;
+          padding: 0.75rem;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 1rem;
+          margin-bottom: 1rem;
+        }
+        .join-btn {
           width: 100%;
           padding: 1rem;
           background: #00aacc;
           color: white;
           border: none;
-          border-radius: 12px;
+          border-radius: 8px;
           font-size: 1.125rem;
           font-weight: 600;
           cursor: pointer;
         }
-
-        .note {
-          font-size: 0.875rem;
-          color: #6b7280;
-          margin-top: 1rem;
-        }
-
-        .loader {
-          width: 60px;
-          height: 60px;
-          border: 4px solid #323232;
-          border-top-color: #00aacc;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 1.5rem;
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        .tips {
-          background: #323232;
-          padding: 1.5rem;
-          border-radius: 12px;
-          text-align: left;
-        }
-
-        .call-screen {
-          width: 100%;
-          max-width: 1200px;
-        }
-
-        .video-area {
-          position: relative;
-          aspect-ratio: 16/9;
-          background: #262626;
-          border-radius: 16px;
-          overflow: hidden;
-          margin-bottom: 1rem;
-        }
-
-        .remote-video {
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, #1a1a1a, #262626);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .doctor-placeholder {
-          text-align: center;
-          color: white;
-        }
-
-        .avatar {
-          display: block;
-          width: 100px;
-          height: 100px;
-          background: #00aacc;
-          border-radius: 50%;
-          font-size: 2.5rem;
-          line-height: 100px;
-          margin: 0 auto 1rem;
-        }
-
-        .name {
-          display: block;
-          font-size: 1.25rem;
-          font-weight: 600;
-        }
-
-        .specialty {
-          color: #a1a1a1;
-        }
-
-        .local-video {
-          position: absolute;
-          bottom: 1rem;
-          right: 1rem;
-          width: 200px;
-          height: 150px;
-          background: #323232;
-          border-radius: 12px;
-        }
-
-        .call-info {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          color: white;
-          margin-bottom: 1rem;
-        }
-
-        .status-indicator {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .dot {
-          width: 10px;
-          height: 10px;
-          background: #ef4444;
-          border-radius: 50%;
-          animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-
-        .duration {
-          font-size: 1.25rem;
-          font-weight: 600;
-        }
-
-        .call-controls {
-          display: flex;
-          justify-content: center;
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .control-btn {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          border: none;
-          font-size: 1.5rem;
-          cursor: pointer;
-          background: #323232;
-          color: white;
-        }
-
-        .control-btn.end {
-          background: #ef4444;
-        }
-
-        .chat-area {
-          background: #262626;
-          border-radius: 12px;
-          padding: 1rem;
-        }
-
-        .chat-messages {
-          height: 150px;
-          overflow-y: auto;
-          margin-bottom: 1rem;
-        }
-
-        .message {
-          padding: 0.5rem 1rem;
-          border-radius: 8px;
-          margin-bottom: 0.5rem;
-        }
-
-        .message.system {
-          background: #323232;
-          color: #a1a1a1;
-          text-align: center;
-          font-size: 0.875rem;
-        }
-
-        .message.you {
-          background: #00aacc;
-          color: white;
-          margin-left: auto;
-          max-width: 70%;
-        }
-
-        .chat-input {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .chat-input input {
-          flex: 1;
-          padding: 0.75rem 1rem;
-          border: none;
-          border-radius: 8px;
-          background: #323232;
-          color: white;
-        }
-
-        .chat-input button {
-          padding: 0.75rem 1.5rem;
-          background: #00aacc;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-        }
-
-        .summary {
-          background: #323232;
-          padding: 1.5rem;
-          border-radius: 12px;
-          text-align: left;
-          margin-bottom: 2rem;
-        }
-
-        .summary h3 {
-          margin-bottom: 0.75rem;
-        }
-
-        .summary p {
-          margin-bottom: 0.5rem;
-        }
-
-        .actions {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .btn-primary, .btn-secondary {
-          flex: 1;
-          padding: 0.875rem;
-          border-radius: 8px;
-          text-decoration: none;
-          font-weight: 600;
-        }
-
-        .btn-primary {
-          background: #00aacc;
-          color: white;
-        }
-
-        .btn-secondary {
-          background: transparent;
-          color: white;
-          border: 1px solid #e5e7eb;
+        .join-btn:disabled {
+          opacity: 0.6;
         }
       `}</style>
     </div>
+  );
+}
+
+export default function ConsultationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ConsultationContent />
+    </Suspense>
   );
 }
