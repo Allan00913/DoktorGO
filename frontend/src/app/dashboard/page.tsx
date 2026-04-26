@@ -91,7 +91,7 @@ export default function DashboardPage() {
             </div>
             <Link href="/consultation" className="consultation-btn">
               <span className="btn-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00aacc" strokeWidth="2">
                   <polygon points="23 7 16 12 23 17 23 7"/>
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
