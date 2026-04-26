@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -17,7 +17,14 @@ function ConsultationContent() {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
 
+  const localVideoRef = useRef<HTMLDivElement>(null);
+  const remoteVideoRef = useRef<HTMLDivElement>(null);
+  const clientRef = useRef<any>(null);
+  const localAudioTrackRef = useRef<any>(null);
+  const localVideoTrackRef = useRef<any>(null);
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+  const AGORA_APP_ID = 'f9aca798629743b781c45152f29904b7';
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -54,7 +61,7 @@ function ConsultationContent() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const startCall = async () => {
+const startCall = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -76,6 +83,8 @@ function ConsultationContent() {
       if (data.roomId) {
         setRoomId(data.roomId);
         setToken(data.token);
+        
+        await initializeAgora(data.channelName, data.token);
         setInCall(true);
       } else {
         alert('Failed to start call');
@@ -88,23 +97,80 @@ function ConsultationContent() {
     }
   };
 
-  const endCall = async () => {
-    if (roomId) {
-      try {
-        const token = localStorage.getItem('token');
-        await fetch(`${API_URL}/consultations/video/room/${roomId}/end`, {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } catch (err) {
-        console.error(err);
+  const initializeAgora = async (channelName: string, agoraToken: string) => {
+    try {
+      // Dynamic import for client-side only
+      const { default: AgoraRTCLib } = await import('agora-rtc-sdk-ng');
+      
+      const client = AgoraRTCLib.createClient({
+        mode: 'rtc',
+        codec: 'vp8',
+      });
+      clientRef.current = client;
+
+      client.on('user-published', async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        if (mediaType === 'video' && remoteVideoRef.current) {
+          user.videoTrack?.play(remoteVideoRef.current);
+        }
+        if (mediaType === 'audio') {
+          user.audioTrack?.play();
+        }
+      });
+
+      client.on('user-left', (user) => {
+        console.log('User left:', user);
+      });
+
+      const [audioTrack, videoTrack] = await AgoraRTCLib.createMicrophoneAndCameraTracks();
+      localAudioTrackRef.current = audioTrack;
+      localVideoTrackRef.current = videoTrack;
+
+      if (localVideoRef.current) {
+        videoTrack.play(localVideoRef.current);
       }
+
+      await client.join(AGORA_APP_ID, channelName, agoraToken, null);
+      await client.publish([audioTrack, videoTrack]);
+    } catch (err) {
+      console.error('Agora error:', err);
+      alert('Failed to initialize video. Using mock mode.');
+    }
+  };
+
+  const endCall = async () => {
+    try {
+      if (localAudioTrackRef.current) {
+        localAudioTrackRef.current.stop();
+        localAudioTrackRef.current.close();
+      }
+      if (localVideoTrackRef.current) {
+        localVideoTrackRef.current.stop();
+        localVideoTrackRef.current.close();
+      }
+      if (clientRef.current) {
+        await clientRef.current.leave();
+      }
+    } catch (err) {
+      console.error('Error ending call:', err);
     }
     setInCall(false);
     setRoomId('');
     setToken('');
     setCallDuration(0);
+  };
+
+  const endCallAndExit = async () => {
+    await endCall();
     router.push('/appointments');
+  };
+
+  const endCallFromButton = async () => {
+    await endCall();
+    setInCall(false);
+    setRoomId('');
+    setToken('');
+    setCallDuration(0);
   };
 
   if (inCall) {
@@ -141,7 +207,7 @@ function ConsultationContent() {
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
               </svg>
             </button>
-            <button className="end-btn" onClick={endCall} title="End Call">
+            <button className="end-btn" onClick={endCallFromButton} title="End Call">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
               </svg>
