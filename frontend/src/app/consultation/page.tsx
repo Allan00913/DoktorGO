@@ -99,13 +99,17 @@ const startCall = async () => {
 
   const initializeAgora = async (channelName: string, agoraToken: string) => {
     try {
+      console.log('Initializing Agora with:', { appId: AGORA_APP_ID, channelName, token: agoraToken });
+      
       // Dynamic import for client-side only
       const { default: AgoraRTCLib } = await import('agora-rtc-sdk-ng');
-      
+      console.log('AgoraRTC loaded:', !!AgoraRTCLib);
+       
       const client = AgoraRTCLib.createClient({
         mode: 'rtc',
         codec: 'vp8',
       });
+      console.log('Client created:', !!client);
       clientRef.current = client;
 
       client.on('user-published', async (user, mediaType) => {
@@ -133,8 +137,11 @@ const startCall = async () => {
       await client.join(AGORA_APP_ID, channelName, agoraToken, null);
       await client.publish([audioTrack, videoTrack]);
     } catch (err) {
-      console.error('Agora error:', err);
-      alert('Failed to initialize video: ' + (err as Error).message + '. Using mock mode.');
+      console.error('Agora error details:', err);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      alert('Video init failed: ' + errorMsg.substring(0, 50) + '. Using mock mode.');
+      // Fall back to mock mode
+      setInCall(true);
     }
   };
 

@@ -64,19 +64,27 @@ export class VideoService {
   }
 
   private generateAgoraToken(channelName: string, uid: string): string {
-    const version = '006';
+    // Agora token v3 format using HMAC-SHA256
+    const version = '003';
     const issueTime = Math.floor(Date.now() / 1000);
     const expireTime = issueTime + 3600;
     const randomStr = Math.floor(Math.random() * 100000).toString();
     
-    const signatureStr = `${this.appId}${channelName}${randomStr}${expireTime}`;
+    // Signature: appId + channelName + randomStr + expireTime
+    const signatureStr = this.appId + channelName + randomStr + expireTime.toString();
     const signature = crypto_js.HmacSHA256(signatureStr, this.appCertificate);
     const signatureHex = signature.toString(crypto_js.enc.Hex);
     
-    const tokenStr = `${version}:${this.appId}:${randomStr}:${expireTime}:${signatureHex}`;
-    const token = Buffer.from(tokenStr).toString('base64');
+    // Build token object
+    const tokenData = {
+      ver: version,
+      app_id: this.appId,
+      random_str: randomStr,
+      expire_time: expireTime,
+      signature: signatureHex,
+    };
     
-    return token;
+    return Buffer.from(JSON.stringify(tokenData)).toString('base64');
   }
 
   private generateMockToken(channelName: string): string {
