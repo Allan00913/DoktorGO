@@ -303,10 +303,6 @@ export default function DashboardPage() {
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
-        .consultation-btn .btn-icon svg {
-          stroke: #00aacc;
-        }
-
         .consultation-btn span {
           color: #00aacc;
         }
