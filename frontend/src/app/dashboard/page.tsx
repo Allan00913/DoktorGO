@@ -96,7 +96,7 @@ export default function DashboardPage() {
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
               </span>
-              Start Instant Consultation
+              <span>Start Instant Consultation</span>
             </Link>
           </section>
 
@@ -302,6 +302,10 @@ export default function DashboardPage() {
         .consultation-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .consultation-btn span {
+          color: #00aacc;
         }
 
         .btn-icon {
