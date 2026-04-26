@@ -14,6 +14,8 @@ function ConsultationContent() {
   const [inCall, setInCall] = useState(false);
   const [isDoctor, setIsDoctor] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(true);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -130,9 +132,25 @@ function ConsultationContent() {
         <div className="call-controls">
           <div className="timer">{formatDuration(callDuration)}</div>
           <div className="buttons">
-            <button className="mute-btn">🎤</button>
-            <button className="video-btn">📷</button>
-            <button className="end-btn" onClick={endCall}>📞</button>
+            <button className="mute-btn" title="Toggle Mute">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+            <button className="video-btn" title="Toggle Video">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+            </button>
+            <button className="end-btn" onClick={endCall} title="End Call">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -153,71 +171,101 @@ function ConsultationContent() {
           .remote-video {
             width: 80%;
             height: 60%;
-            background: #2a2a2a;
-            border-radius: 12px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
           }
           .avatar {
-            font-size: 5rem;
+            font-size: 8rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
           }
-          .avatar.small {
+          .avatar small {
             font-size: 2rem;
             position: absolute;
             bottom: 20px;
             right: 20px;
-            background: #333;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border-radius: 50%;
-            padding: 10px;
+            padding: 12px;
           }
           .local-video {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 120px;
-            height: 90px;
-            background: #333;
-            border-radius: 8px;
+            bottom: 30px;
+            right: 30px;
+            width: 140px;
+            height: 105px;
+            background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
           }
           .call-controls {
-            background: #222;
-            padding: 1rem;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.6));
+            padding: 1.5rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            backdrop-filter: blur(20px);
           }
           .timer {
             color: white;
             font-size: 1.25rem;
             font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
           }
           .buttons {
             display: flex;
             gap: 1rem;
+            justify-content: center;
           }
           .mute-btn, .video-btn {
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             border: none;
-            background: #333;
-            font-size: 1.25rem;
+            background: #3a3a3a;
+            color: white;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+          }
+          .mute-btn:hover, .video-btn:hover {
+            background: #4a4a4a;
+            transform: scale(1.05);
+          }
+          .mute-btn.active, .video-btn.active {
+            background: #00aacc;
           }
           .end-btn {
-            width: 60px;
-            height: 60px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             border: none;
             background: #e74c3c;
             color: white;
-            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            transition: all 0.2s;
+          }
+          .end-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
           }
         `}</style>
       </div>
