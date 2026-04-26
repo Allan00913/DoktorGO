@@ -290,7 +290,8 @@ export default function DashboardPage() {
           display: flex;
           align-items: center;
           gap: 0.75rem;
-          background: white;
+          background: transparent;
+          border: 2px solid white;
           padding: 0.875rem 1.5rem;
           border-radius: 12px;
           text-decoration: none;
@@ -299,6 +300,7 @@ export default function DashboardPage() {
         }
 
         .consultation-btn:hover {
+          background: rgba(255,255,255,0.15);
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
