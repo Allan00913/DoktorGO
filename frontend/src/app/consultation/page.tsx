@@ -292,7 +292,7 @@ function ConsultationContent() {
           <div className="consultation-card">
             <div className="hero-banner">
               <div className="video-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00aacc" strokeWidth="2">
                   <polygon points="23 7 16 12 23 17 23 7"/>
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
@@ -346,34 +346,34 @@ function ConsultationContent() {
         }
         .hero-banner {
           background: linear-gradient(135deg, #00aacc 0%, #008ba8 100%);
-          padding: 2rem;
+          padding: 1.5rem 2rem;
           display: flex;
           align-items: center;
-          gap: 1.5rem;
+          gap: 1.25rem;
         }
         .video-icon {
-          width: 80px;
-          height: 80px;
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 16px;
+          width: 48px;
+          height: 48px;
+          background: white;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
+          flex-shrink: 0;
         }
         .hero-text {
           text-align: left;
         }
         .hero-text h2 {
           color: white;
-          font-size: 1.5rem;
-          margin: 0 0 0.5rem;
+          font-size: 1.25rem;
+          margin: 0 0 0.25rem;
           font-weight: 700;
         }
         .hero-text p {
-          color: rgba(255, 255, 255, 0.9);
+          color: rgba(255, 255, 255, 0.85);
           margin: 0;
-          font-size: 0.95rem;
+          font-size: 0.875rem;
         }
         .consultation-card h1 {
           display: none;
