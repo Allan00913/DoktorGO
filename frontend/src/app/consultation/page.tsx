@@ -290,10 +290,20 @@ function ConsultationContent() {
       <main className="main-content">
         <div className="container">
           <div className="consultation-card">
-            <div className="icon">📹</div>
-            <h1>Video Consultation</h1>
-            <p>Connect with your doctor via secure video call</p>
+            <div className="hero-banner">
+              <div className="video-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="23 7 16 12 23 17 23 7"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+              </div>
+              <div className="hero-text">
+                <h2>Start Instant Consultation</h2>
+                <p>Connect with a doctor in minutes</p>
+              </div>
+            </div>
 
+            <div className="card-content">
             <div className="info-box">
               <h3>Before joining:</h3>
               <ul>
@@ -306,7 +316,7 @@ function ConsultationContent() {
 
             <input
               type="text"
-              placeholder="Enter appointment ID (or leave empty to create new)"
+              placeholder="Enter appointment ID (optional)"
               value={appointmentId}
               onChange={(e) => setAppointmentId(e.target.value)}
             />
@@ -319,6 +329,7 @@ function ConsultationContent() {
               {loading ? 'Connecting...' : 'Join Consultation'}
             </button>
           </div>
+          </div>
         </div>
       </main>
 
@@ -326,18 +337,53 @@ function ConsultationContent() {
         .consultation-card {
           max-width: 500px;
           margin: 0 auto;
-          padding: 2rem;
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+          padding: 0;
+          border-radius: 16px;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
           background: white;
+          overflow: hidden;
           text-align: center;
         }
-        .icon {
-          font-size: 4rem;
-          margin-bottom: 1rem;
+        .hero-banner {
+          background: linear-gradient(135deg, #00aacc 0%, #008ba8 100%);
+          padding: 2rem;
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
         }
-        h1 {
-          font-size: 1.75rem;
+        .video-icon {
+          width: 80px;
+          height: 80px;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+        }
+        .hero-text {
+          text-align: left;
+        }
+        .hero-text h2 {
+          color: white;
+          font-size: 1.5rem;
+          margin: 0 0 0.5rem;
+          font-weight: 700;
+        }
+        .hero-text p {
+          color: rgba(255, 255, 255, 0.9);
+          margin: 0;
+          font-size: 0.95rem;
+        }
+        .consultation-card h1 {
+          display: none;
+        }
+        .consultation-card > p {
+          display: none;
+        }
+        .consultation-card :global(.card-content) {
+          padding: 2rem;
+        }
           margin-bottom: 0.5rem;
         }
         .consultation-card p {
@@ -345,45 +391,65 @@ function ConsultationContent() {
           margin-bottom: 1.5rem;
         }
         .info-box {
-          background: #f0f9ff;
-          border-radius: 8px;
-          padding: 1rem;
+          background: #f8fafc;
+          border-radius: 12px;
+          padding: 1.25rem;
           text-align: left;
           margin-bottom: 1.5rem;
+          border: 1px solid #e5e7eb;
         }
         .info-box h3 {
           font-size: 1rem;
-          margin-bottom: 0.5rem;
+          margin: 0 0 0.75rem;
+          color: #1f2937;
+          font-weight: 600;
         }
         .info-box ul {
           margin: 0;
-          padding-left: 1.25rem;
+          padding-left: 0;
+          list-style: none;
         }
         .info-box li {
           color: #374151;
-          margin-bottom: 0.25rem;
+          margin-bottom: 0.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.9rem;
         }
         input {
           width: 100%;
-          padding: 0.75rem;
+          padding: 0.875rem 1rem;
           border: 2px solid #e5e7eb;
-          border-radius: 8px;
+          border-radius: 10px;
           font-size: 1rem;
           margin-bottom: 1rem;
+          transition: border-color 0.2s;
+        }
+        input:focus {
+          outline: none;
+          border-color: #00aacc;
         }
         .join-btn {
           width: 100%;
           padding: 1rem;
-          background: #00aacc;
+          background: linear-gradient(135deg, #00aacc 0%, #008ba8 100%);
           color: white;
           border: none;
-          border-radius: 8px;
+          border-radius: 10px;
           font-size: 1.125rem;
           font-weight: 600;
           cursor: pointer;
+          transition: all 0.2s;
+          box-shadow: 0 4px 15px rgba(0, 170, 204, 0.3);
+        }
+        .join-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 170, 204, 0.4);
         }
         .join-btn:disabled {
           opacity: 0.6;
+          transform: none;
         }
       `}</style>
     </div>
