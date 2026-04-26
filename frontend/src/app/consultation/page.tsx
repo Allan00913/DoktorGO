@@ -134,7 +134,7 @@ const startCall = async () => {
       await client.publish([audioTrack, videoTrack]);
     } catch (err) {
       console.error('Agora error:', err);
-      alert('Failed to initialize video. Using mock mode.');
+      alert('Failed to initialize video: ' + (err as Error).message + '. Using mock mode.');
     }
   };
 

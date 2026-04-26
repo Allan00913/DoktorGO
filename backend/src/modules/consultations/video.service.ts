@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
+import * as crypto_js from 'crypto-js';
 
 export interface VideoRoomResponse {
   roomId: string;
@@ -63,28 +64,19 @@ export class VideoService {
   }
 
   private generateAgoraToken(channelName: string, uid: string): string {
-    const expirationTimeInSeconds = 3600;
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-    const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+    const version = '006';
+    const issueTime = Math.floor(Date.now() / 1000);
+    const expireTime = issueTime + 3600;
+    const randomStr = Math.floor(Math.random() * 100000).toString();
     
-    const token = this.generateToken(
-      this.appId,
-      this.appCertificate,
-      channelName,
-      uid,
-      privilegeExpiredTs,
-      0
-    );
+    const signatureStr = `${this.appId}${channelName}${randomStr}${expireTime}`;
+    const signature = crypto_js.HmacSHA256(signatureStr, this.appCertificate);
+    const signatureHex = signature.toString(crypto_js.enc.Hex);
+    
+    const tokenStr = `${version}:${this.appId}:${randomStr}:${expireTime}:${signatureHex}`;
+    const token = Buffer.from(tokenStr).toString('base64');
     
     return token;
-  }
-
-  private generateToken(appId: string, appCert: string, channelName: string, uid: string, expireTime: number, role: number = 1): string {
-    const version = '006';
-    const cryptoStr = appCert + appId + channelName + uid + expireTime.toString();
-    const hash = crypto.createHash('sha256').update(cryptoStr).digest('hex');
-    
-    return version + hash;
   }
 
   private generateMockToken(channelName: string): string {
