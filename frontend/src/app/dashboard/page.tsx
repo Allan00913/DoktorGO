@@ -96,7 +96,7 @@ export default function DashboardPage() {
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
               </span>
-              <span>Start Instant Consultation</span>
+              <span className="btn-text" style={{ color: 'white' }}>Start Instant Consultation</span>
             </Link>
           </section>
 
@@ -307,6 +307,10 @@ export default function DashboardPage() {
 
         .consultation-btn span {
           color: white;
+        }
+
+        .consultation-btn .btn-text {
+          color: #ffffff;
         }
 
         .btn-icon {
