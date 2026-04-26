@@ -91,7 +91,7 @@ export default function DashboardPage() {
             </div>
             <Link href="/consultation" className="consultation-btn">
               <span className="btn-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00aacc" strokeWidth="2">
                   <polygon points="23 7 16 12 23 17 23 7"/>
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
@@ -305,7 +305,14 @@ export default function DashboardPage() {
         }
 
         .btn-icon {
-          font-size: 1.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-icon svg {
+          width: 24px;
+          height: 24px;
         }
 
         .stats-grid {

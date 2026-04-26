@@ -292,7 +292,7 @@ function ConsultationContent() {
           <div className="consultation-card">
             <div className="hero-banner">
               <div className="video-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00aacc" strokeWidth="2">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00aacc" strokeWidth="2">
                   <polygon points="23 7 16 12 23 17 23 7"/>
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
@@ -352,8 +352,8 @@ function ConsultationContent() {
           gap: 1.25rem;
         }
         .video-icon {
-          width: 48px;
-          height: 48px;
+          width: 56px;
+          height: 56px;
           background: white;
           border-radius: 12px;
           display: flex;
