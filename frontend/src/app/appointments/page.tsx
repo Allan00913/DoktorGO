@@ -11,6 +11,8 @@ interface Appointment {
   appointmentDate: string;
   status: string;
   type: string;
+  consultationFee?: number;
+  isPaid?: boolean;
 }
 
 export default function AppointmentsPage() {

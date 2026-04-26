@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -16,15 +16,13 @@ const paymentMethods: PaymentMethod[] = [
   { id: 'grabpay', name: 'GrabPay', icon: '💚' },
 ];
 
-export default function PaymentPage() {
+function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [paymentUrl, setPaymentUrl] = useState('');
-  const [qrCode, setQrCode] = useState('');
   const [appointmentId, setAppointmentId] = useState('');
   const [doctorName, setDoctorName] = useState('');
 
@@ -79,10 +77,8 @@ export default function PaymentPage() {
 
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
-      } else if (data.qrCode) {
-        setQrCode(data.qrCode);
       } else if (data.error) {
-        alert('GCash not configured yet. In production, this would redirect to GCash app.\n\nAmount: ₱' + amount);
+        alert('GCash not configured yet. In production, this would redirect.\n\nAmount: ₱' + amount);
         router.push('/appointments');
       } else {
         alert('Payment initialized! Amount: ₱' + amount);
@@ -130,7 +126,6 @@ export default function PaymentPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  disabled
                 />
               </div>
             </div>
@@ -161,21 +156,8 @@ export default function PaymentPage() {
               {loading ? 'Processing...' : `Pay ₱${amount || 0}`}
             </button>
 
-            <p className="secure">
-              🔒 Secured by GCash. Your payment is safe.
-            </p>
+            <p className="secure">🔒 Secured by GCash</p>
           </div>
-
-          {qrCode && (
-            <div className="qr-modal">
-              <div className="qr-content">
-                <h2>Scan to Pay</h2>
-                <img src={qrCode} alt="Payment QR Code" />
-                <p>Open GCash app and scan this QR</p>
-                <button onClick={() => setQrCode('')}>Close</button>
-              </div>
-            </div>
-          )}
         </div>
       </main>
 
@@ -193,7 +175,7 @@ export default function PaymentPage() {
           margin-bottom: 0.5rem;
         }
         .recipient {
-          color: var(--muted);
+          color: #6b7280;
           margin-bottom: 1.5rem;
         }
         .amount-display {
@@ -207,13 +189,13 @@ export default function PaymentPage() {
         .amount-input {
           display: flex;
           align-items: center;
-          border: 2px solid var(--border);
+          border: 2px solid #e5e7eb;
           border-radius: 8px;
           padding: 0 1rem;
         }
         .amount-input .currency {
           font-size: 1.5rem;
-          color: var(--muted);
+          color: #6b7280;
         }
         .amount-input input {
           border: none;
@@ -221,6 +203,7 @@ export default function PaymentPage() {
           font-weight: 700;
           width: 100%;
           padding: 0.5rem;
+          background: transparent;
         }
         .methods label {
           display: block;
@@ -238,7 +221,7 @@ export default function PaymentPage() {
           flex-direction: column;
           align-items: center;
           padding: 1rem;
-          border: 2px solid var(--border);
+          border: 2px solid #e5e7eb;
           border-radius: 8px;
           background: white;
           cursor: pointer;
@@ -277,37 +260,18 @@ export default function PaymentPage() {
         }
         .secure {
           text-align: center;
-          color: var(--muted);
+          color: #6b7280;
           font-size: 0.875rem;
-        }
-        .qr-modal {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.8);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .qr-content {
-          background: white;
-          padding: 2rem;
-          border-radius: 12px;
-          text-align: center;
-        }
-        .qr-content img {
-          width: 200px;
-          height: 200px;
-          margin: 1rem 0;
-        }
-        .qr-content button {
-          padding: 0.75rem 2rem;
-          background: #00aacc;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
         }
       `}</style>
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentContent />
+    </Suspense>
   );
 }

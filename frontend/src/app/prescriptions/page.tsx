@@ -16,6 +16,7 @@ interface Prescription {
 
 export default function PrescriptionsPage() {
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRx, setSelectedRx] = useState<Prescription | null>(null);
@@ -33,7 +34,7 @@ export default function PrescriptionsPage() {
   const fetchPrescriptions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/prescriptions`, {
+      const res = await fetch(`${API_URL}/prescriptions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
