@@ -99,17 +99,14 @@ const startCall = async () => {
 
   const initializeAgora = async (channelName: string, agoraToken: string) => {
     try {
-      console.log('Initializing Agora with:', { appId: AGORA_APP_ID, channelName, token: agoraToken });
+      console.log('Initializing Agora:', { appId: AGORA_APP_ID, channelName, token: agoraToken });
       
-      // Dynamic import for client-side only
       const { default: AgoraRTCLib } = await import('agora-rtc-sdk-ng');
-      console.log('AgoraRTC loaded:', !!AgoraRTCLib);
        
       const client = AgoraRTCLib.createClient({
         mode: 'rtc',
         codec: 'vp8',
       });
-      console.log('Client created:', !!client);
       clientRef.current = client;
 
       client.on('user-published', async (user, mediaType) => {
@@ -130,12 +127,17 @@ const startCall = async () => {
       localAudioTrackRef.current = audioTrack;
       localVideoTrackRef.current = videoTrack;
 
+      // Play local video
       if (localVideoRef.current) {
         videoTrack.play(localVideoRef.current);
       }
 
-      await client.join(AGORA_APP_ID, channelName, agoraToken, null);
+      // Join with numeric uid
+      const uid = 0;
+      await client.join(AGORA_APP_ID, channelName, agoraToken, uid);
       await client.publish([audioTrack, videoTrack]);
+      
+      console.log('Agora joined successfully');
     } catch (err) {
       console.error('Agora error details:', err);
       const errorMsg = err instanceof Error ? err.message : String(err);
@@ -184,16 +186,13 @@ const startCall = async () => {
     return (
       <div className="call-page">
         <div className="video-area">
-          <div className="remote-video">
+          <div className="remote-video" ref={remoteVideoRef}>
             <div className="avatar">
               {isDoctor ? '👨‍⚕️' : '👤'}
             </div>
-            <p>{isDoctor ? 'Patient' : 'Dr. Smith'}</p>
+            <p>Waiting for doctor...</p>
           </div>
-          <div className="local-video">
-            <div className="avatar small">
-              {isDoctor ? '👨‍⚕️' : '👤'}
-            </div>
+          <div className="local-video" ref={localVideoRef}>
           </div>
         </div>
 
