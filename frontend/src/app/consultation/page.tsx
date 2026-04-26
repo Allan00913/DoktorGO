@@ -55,11 +55,6 @@ function ConsultationContent() {
   };
 
   const startCall = async () => {
-    if (!appointmentId) {
-      alert('No appointment selected');
-      return;
-    }
-
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -70,7 +65,7 @@ function ConsultationContent() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          appointmentId,
+          appointmentId: appointmentId || undefined,
           doctorId: 'current-doctor-id',
           patientId: 'current-patient-id',
         }),
